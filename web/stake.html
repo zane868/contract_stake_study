@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MetaNodeStake · Sepolia</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0c1220; color: #edf3ff; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1040px; margin: auto; padding: 28px 18px 70px; }
+    h1 { font-size: clamp(29px, 5vw, 42px); margin: 0 0 8px; }
+    h2 { font-size: 20px; margin: 0 0 16px; }
+    h3 { font-size: 16px; margin: 20px 0 10px; }
+    p, li { color: #b6c3dc; line-height: 1.55; }
+    a { color: #93c5ff; overflow-wrap: anywhere; }
+    .top, .row, .actions { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+    .top { justify-content: space-between; align-items: center; margin-bottom: 22px; }
+    .tag { display: inline-block; color: #a9f4d2; background: #173a31; border-radius: 99px; padding: 5px 11px; font-size: 13px; margin-bottom: 10px; }
+    .warning { background: #312719; color: #ffe2a2; border: 1px solid #85632c; border-radius: 12px; padding: 15px 18px; line-height: 1.55; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; }
+    .card { background: #171f32; border: 1px solid #303d59; border-radius: 16px; padding: 22px; }
+    .full { grid-column: 1 / -1; }
+    .metric { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; }
+    .metric dt, .metric dd { padding: 7px 0; border-bottom: 1px solid #2c3953; }
+    .metric dt { color: #afbdd7; }
+    .metric dd { margin: 0; text-align: right; overflow-wrap: anywhere; }
+    .field { flex: 1 1 160px; min-width: 0; }
+    label { display: block; color: #bfcae0; margin: 9px 0 6px; font-size: 14px; }
+    input, select { width: 100%; background: #0c1425; color: white; border: 1px solid #4c5a7a; border-radius: 9px; padding: 11px; font-size: 15px; }
+    input[type=checkbox] { width: auto; accent-color: #9cc9ff; }
+    .check { display: inline-flex; gap: 7px; align-items: center; margin: 10px 0; }
+    button { border: 0; cursor: pointer; border-radius: 9px; padding: 11px 15px; background: #98c9ff; color: #102036; font-size: 14px; font-weight: 650; }
+    button.secondary { background: #354464; color: #f0f5ff; }
+    button.danger { background: #6b3641; color: #ffe1e5; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .small { font-size: 13px; }
+    .hidden { display: none !important; }
+    .stack { display: grid; gap: 12px; }
+    .divider { border: 0; border-top: 1px solid #34415d; margin: 20px 0; }
+    #status { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 3px solid #7eaeeb; background: #111a2d; padding: 11px 14px; min-height: 48px; }
+    #status.error { border-color: #ee8a8a; color: #ffbaba; }
+    #status.success { border-color: #85d5ae; color: #abf1c9; }
+    #admin-panel summary { cursor: pointer; font-size: 20px; font-weight: 700; }
+    #admin-panel[open] summary { margin-bottom: 14px; }
+    @media (max-width: 690px) { .grid { grid-template-columns: 1fr; } .full { grid-column: auto; } .metric { grid-template-columns: 1fr; } .metric dd { text-align: left; padding-top: 0; } }
+  </style>
+  <script src="keccak.js" defer></script>
+  <script src="stake.js" defer></script>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div><span class="tag">Sepolia 测试网</span><h1>MetaNodeStake</h1><p>通过钱包直接操作已部署的质押合约。</p></div>
+    <button id="connect">连接钱包</button>
+  </header>
+  <div class="warning">此页面连接 Sepolia 测试网。升级后的质押合约已通过 11 项单元测试；请仅使用测试资产。管理操作会改变链上参数。</div>
+
+  <div class="grid">
+    <section class="card full">
+      <h2>合约状态</h2>
+      <dl class="metric">
+        <dt>钱包</dt><dd id="account">未连接</dd>
+        <dt>网络 / 当前区块</dt><dd id="network">—</dd>
+        <dt>奖励区块</dt><dd id="blocks">—</dd>
+        <dt>每区块奖励</dt><dd id="rate">—</dd>
+        <dt>资金池数量 / 总权重</dt><dd id="pool-count">—</dd>
+        <dt>奖励代币</dt><dd id="reward-token">—</dd>
+        <dt>合约奖励余额</dt><dd id="funding">—</dd>
+        <dt>暂停状态</dt><dd id="pause-state">—</dd>
+        <dt>我的权限</dt><dd id="roles">—</dd>
+      </dl>
+    </section>
+
+    <section class="card full">
+      <div class="row"><div class="field"><label for="pool-select">选择资金池</label><select id="pool-select" disabled><option value="0">ETH 池 #0</option></select></div><button id="refresh" class="secondary" disabled>刷新</button></div>
+      <dl class="metric">
+        <dt>质押资产 / 合约</dt><dd id="stake-token">—</dd>
+        <dt>权重 / 上次奖励区块</dt><dd id="pool-weight">—</dd>
+        <dt>池中已质押 / 最低质押</dt><dd id="pool-amount">—</dd>
+        <dt>解质押锁定</dt><dd id="lock">—</dd>
+        <dt>钱包资产余额</dt><dd id="wallet-balance">—</dd>
+        <dt>合约授权额度</dt><dd id="allowance">—</dd>
+        <dt>我的质押</dt><dd id="staked">—</dd>
+        <dt>待领取奖励</dt><dd id="pending">—</dd>
+        <dt>申请解质押总量</dt><dd id="requested">—</dd>
+        <dt>已解锁可提取</dt><dd id="withdrawable">—</dd>
+        <dt>距离下一笔可提取</dt><dd id="remaining-blocks">—</dd>
+        <dt>钱包奖励代币</dt><dd id="reward-balance">—</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>质押</h2>
+      <div class="row"><div class="field"><label for="deposit-amount">质押数量</label><input id="deposit-amount" inputmode="decimal" placeholder="输入数量"></div><button id="deposit" disabled>质押</button></div>
+      <p id="deposit-note" class="small">ETH 池最低 0.01 ETH；交易另需 Gas。</p>
+      <div id="approve-box" class="hidden"><p class="small">ERC20 质押前需授权此合约使用对应数量的代币。</p><div class="actions"><button id="approve" class="secondary" disabled>授权输入数量</button><button id="reset-approve" class="secondary" disabled>清零授权</button></div></div>
+    </section>
+
+    <section class="card">
+      <h2>退出及奖励</h2>
+      <div class="row"><div class="field"><label for="unstake-amount">申请解质押数量</label><input id="unstake-amount" inputmode="decimal" placeholder="输入数量"></div><button id="unstake" class="secondary" disabled>申请解质押</button></div>
+      <p class="small">申请后需等待该池设置的锁定区块数。</p>
+      <div class="actions"><button id="withdraw" class="secondary" disabled>提取已解锁资产</button><button id="claim" class="secondary" disabled>领取奖励</button></div>
+      <p class="small">提取按钮在“已解锁可提取”大于 0 时启用；等待解锁期间页面每 15 秒自动刷新，也可以点击上方“刷新”。</p>
+    </section>
+
+    <section class="card full">
+      <h2>奖励与资金池查询</h2>
+      <div class="row"><div class="field"><label for="query-block">查询指定区块的预计奖励</label><input id="query-block" inputmode="numeric" placeholder="区块号"></div><button id="query-reward" class="secondary" disabled>查询</button></div>
+      <p id="query-result" class="small">—</p>
+      <div class="row"><div class="field"><label for="from-block">奖励区间起始区块</label><input id="from-block" inputmode="numeric" placeholder="起始区块"></div><div class="field"><label for="to-block">结束区块（不含）</label><input id="to-block" inputmode="numeric" placeholder="结束区块"></div><button id="query-multiplier" class="secondary" disabled>查询区间总奖励</button></div>
+      <p id="multiplier-result" class="small">—</p>
+      <div class="actions"><button id="update-pool" class="secondary" disabled>更新当前池奖励账本</button><button id="update-all" class="secondary" disabled>更新全部资金池</button></div>
+      <p class="small">以上更新操作会发送交易并消耗 Gas；查询操作不会。</p>
+      <hr class="divider">
+      <h3>补充奖励代币</h3>
+      <div class="row"><div class="field"><label for="fund-amount">转入质押合约的奖励代币数量</label><input id="fund-amount" inputmode="decimal" placeholder="输入数量"></div><button id="fund" class="secondary" disabled>转入奖励代币</button></div>
+    </section>
+
+    <section class="card full">
+      <h2>交易状态</h2><div id="status" role="status" aria-live="polite">请连接浏览器钱包。</div>
+      <p class="small">质押代理：<a href="https://sepolia.etherscan.io/address/0xe22E65cc67457678B361476158f7865e949BBcd5" target="_blank" rel="noopener noreferrer">0xe22E65cc67457678B361476158f7865e949BBcd5</a></p>
+    </section>
+
+    <details class="card full" id="admin-panel">
+      <summary>管理员操作</summary>
+      <p class="small">只有持有相应链上角色的钱包可以提交。参数变更会影响所有用户和现有奖励。</p>
+      <div class="grid">
+        <section>
+          <h3>奖励参数</h3>
+          <label for="admin-start">开始区块</label><input id="admin-start" inputmode="numeric" placeholder="区块号">
+          <button id="set-start" class="secondary" disabled>设置开始区块</button>
+          <label for="admin-end">结束区块</label><input id="admin-end" inputmode="numeric" placeholder="区块号">
+          <button id="set-end" class="secondary" disabled>设置结束区块</button>
+          <label for="admin-rate">每区块奖励代币数量</label><input id="admin-rate" inputmode="decimal" placeholder="例如 10">
+          <button id="set-rate" class="secondary" disabled>设置每区块奖励</button>
+          <label for="admin-reward-token">新奖励代币地址</label><input id="admin-reward-token" placeholder="0x...">
+          <button id="set-token" class="danger" disabled>更换奖励代币</button>
+        </section>
+        <section>
+          <h3>暂停控制</h3>
+          <div class="actions"><button id="toggle-withdraw" class="secondary" disabled>暂停提取/解质押</button><button id="toggle-claim" class="secondary" disabled>暂停领奖</button></div>
+          <h3>新增资金池</h3>
+          <label for="add-token">质押 ERC20 地址</label><input id="add-token" placeholder="0x...">
+          <div class="row"><div class="field"><label for="add-weight">权重</label><input id="add-weight" inputmode="numeric"></div><div class="field"><label for="add-min">最低质押数量</label><input id="add-min" inputmode="decimal"></div><div class="field"><label for="add-lock">锁定区块数</label><input id="add-lock" inputmode="numeric"></div></div>
+          <label class="check"><input id="add-update" type="checkbox" checked>新增前更新所有池</label>
+          <button id="add-pool" class="secondary" disabled>新增资金池</button>
+        </section>
+        <section>
+          <h3>当前池参数</h3>
+          <label for="edit-min">最低质押数量</label><input id="edit-min" inputmode="decimal">
+          <label for="edit-lock">锁定区块数</label><input id="edit-lock" inputmode="numeric">
+          <button id="edit-pool" class="secondary" disabled>更新当前池参数</button>
+          <label for="edit-weight">当前池权重</label><input id="edit-weight" inputmode="numeric">
+          <label class="check"><input id="weight-update" type="checkbox" checked>改权重前更新所有池</label>
+          <button id="set-weight" class="secondary" disabled>设置当前池权重</button>
+        </section>
+        <section>
+          <h3>角色管理</h3>
+          <label for="role-type">角色</label><select id="role-type"><option value="admin">ADMIN_ROLE</option><option value="upgrade">UPGRADE_ROLE</option><option value="default">DEFAULT_ADMIN_ROLE</option></select>
+          <label for="role-address">账户地址</label><input id="role-address" placeholder="0x...">
+          <div class="actions"><button id="check-role" class="secondary" disabled>查询角色</button><button id="grant-role" class="secondary" disabled>授予角色</button><button id="revoke-role" class="danger" disabled>撤销角色</button><button id="renounce-role" class="danger" disabled>放弃自己的角色</button></div>
+          <p id="role-result" class="small">—</p>
+          <h3>UUPS 升级</h3>
+          <label for="upgrade-address">新实现合约地址</label><input id="upgrade-address" placeholder="0x...">
+          <button id="upgrade" class="danger" disabled>升级实现合约</button>
+          <p class="small">仅支持不带初始化调用的升级。请先审查新实现的存储布局和权限。</p>
+        </section>
+      </div>
+    </details>
+  </div>
+</main>
+</body>
+</html>

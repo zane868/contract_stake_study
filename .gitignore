@@ -1,0 +1,21 @@
+# Compiler files
+cache/
+out/
+
+# Commonly ignored directories
+.logs/
+.ignore/
+
+# Deployment logs and recovery state
+broadcast/
+
+# Coverage output
+lcov.info
+
+# Docs
+docs/
+
+# Dotenv file
+.env
+.env.*
+!.env.example
