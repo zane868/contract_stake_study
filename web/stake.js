@@ -23,6 +23,12 @@ const S = {
 };
 const $ = (id) => document.getElementById(id);
 const wallet = window.ethereum;
+document.querySelectorAll('.nav a[href^="#"]').forEach((link) => {
+  link.addEventListener('click', () => {
+    const section = document.querySelector(link.getAttribute('href'));
+    if (section?.tagName === 'DETAILS') section.open = true;
+  });
+});
 let account = null;
 let busy = false;
 let refreshId = 0;

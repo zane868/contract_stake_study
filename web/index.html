@@ -1,352 +1,284 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#eef4ff" />
-    <meta name="description" content="MetaNodeSwap 交换页面静态演示，参考 Sepolia 测试网界面。" />
-    <title>MetaNodeSwap - 去中心化交易所</title>
-    <style>
-      :root {
-        color-scheme: light;
-        --ink: #171717;
-        --muted: #64748b;
-        --line: #e2e8f0;
-        --soft: #f1f5f9;
-        --blue: #2563eb;
-        --blue-hover: #1d4ed8;
-        --shadow: 0 18px 48px rgba(35, 58, 101, 0.10), 0 3px 12px rgba(35, 58, 101, 0.05);
-      }
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#eef4ff">
+  <meta name="description" content="在 Sepolia 测试网查看 MetaNodeStake 资金池，质押、解质押并领取奖励。">
+  <title>MetaNodeStake · Sepolia</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #171717;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --soft: #f1f5f9;
+      --blue: #2563eb;
+      --blue-hover: #1d4ed8;
+      --shadow: 0 18px 48px rgba(35, 58, 101, .10), 0 3px 12px rgba(35, 58, 101, .05);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #eff6ff;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; min-height: 100vh; background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 40%, #f3f4f6 100%); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid rgba(37, 99, 235, .35); outline-offset: 3px; }
+    a { color: var(--blue); overflow-wrap: anywhere; }
+    p { color: var(--muted); line-height: 1.6; }
+    .site-header { position: sticky; top: 0; z-index: 20; height: 65px; border-bottom: 1px solid rgba(226, 232, 240, .9); background: rgba(255, 255, 255, .82); backdrop-filter: blur(18px); }
+    .header-inner { max-width: 1280px; height: 100%; margin: auto; padding: 0 28px; display: flex; align-items: center; gap: 24px; }
+    .brand { color: var(--ink); text-decoration: none; font-size: 20px; font-weight: 750; letter-spacing: -.055em; white-space: nowrap; }
+    .nav { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+    .nav a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 12px; border-radius: 9px; }
+    .nav a:hover, .nav a.active { color: var(--ink); background: rgba(241, 245, 249, .8); }
+    main { max-width: 1120px; margin: auto; padding: 68px 20px 100px; }
+    .hero { text-align: center; margin: 0 auto 30px; }
+    .hero h1 { font-size: clamp(34px, 5vw, 44px); line-height: 1.2; letter-spacing: -.055em; margin: 12px 0 10px; }
+    .hero p { max-width: 610px; margin: auto; font-size: 17px; }
+    h2 { font-size: 20px; letter-spacing: -.025em; margin: 0 0 18px; }
+    h3 { font-size: 16px; margin: 20px 0 12px; }
+    .row, .actions { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
+    .actions { align-items: center; }
+    .tag { display: inline-flex; align-items: center; gap: 7px; color: #1d4ed8; background: #dbeafe; border: 1px solid #bfdbfe; border-radius: 99px; padding: 6px 12px; font-size: 13px; font-weight: 700; }
+    .tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, .14); }
+    .warning { max-width: 920px; margin: 0 auto 24px; padding: 13px 17px; border: 1px solid #bfdbfe; border-radius: 12px; background: rgba(239, 246, 255, .9); color: #475569; font-size: 13px; line-height: 1.6; text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .card { min-width: 0; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: #fff; box-shadow: var(--shadow); }
+    .full { grid-column: 1 / -1; }
+    .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .stat { min-width: 0; padding: 19px 22px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, .85); }
+    .stat span { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+    .stat strong { display: block; color: #1e3a8a; font-size: clamp(16px, 2vw, 21px); letter-spacing: -.025em; overflow-wrap: anywhere; }
+    #staking { grid-row: span 2; }
+    #deposit-card, #withdraw-card { align-self: start; }
+    #withdraw-card .actions { margin-top: 18px; }
+    section[id], details[id] { scroll-margin-top: 85px; }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+    .card-head h2 { margin: 0; }
+    .card-kicker { color: var(--blue); font-size: 12px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .metric { display: grid; grid-template-columns: minmax(170px, .8fr) minmax(0, 1.2fr); gap: 0 18px; margin: 0; }
+    .metric dt, .metric dd { padding: 11px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .metric dt { color: var(--muted); }
+    .metric dd { min-width: 0; margin: 0; text-align: right; overflow-wrap: anywhere; font-weight: 600; }
+    .metric dt:last-of-type, .metric dd:last-of-type { border-bottom: 0; }
+    .pool-bar { align-items: end; margin-bottom: 17px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); }
+    .pool-bar label { margin-top: 0; }
+    .position-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .balance-item { min-width: 0; padding: 15px; border-radius: 11px; background: #f8fafc; }
+    .balance-item span { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .balance-item strong { display: block; font-size: 17px; letter-spacing: -.02em; overflow-wrap: anywhere; }
+    .balance-item.highlight { background: #eff6ff; color: #1d4ed8; }
+    .unlock-note { margin: 14px 0 18px; padding: 13px 15px; border: 1px solid #dbeafe; border-radius: 10px; color: #475569; font-size: 12px; line-height: 1.6; }
+    .unlock-note strong { display: block; color: #1d4ed8; font-size: 14px; margin-top: 3px; overflow-wrap: anywhere; }
+    .pool-details summary { color: var(--muted); cursor: pointer; font-size: 13px; font-weight: 600; }
+    .pool-details[open] summary { margin-bottom: 10px; }
+    .field { flex: 1 1 160px; min-width: 0; }
+    label { display: block; color: #475569; margin: 10px 0 7px; font-size: 13px; font-weight: 600; }
+    input, select { width: 100%; min-height: 44px; color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 15px; transition: border-color .18s, background .18s; }
+    input:focus, select:focus { border-color: #93c5fd; background: #fff; }
+    input::placeholder { color: #94a3b8; }
+    input[type=checkbox] { width: auto; min-height: 0; accent-color: var(--blue); }
+    .check { display: inline-flex; gap: 7px; align-items: center; margin: 10px 0; }
+    button { min-height: 43px; border: 0; border-radius: 9px; padding: 10px 16px; background: var(--blue); color: #fff; font-size: 14px; font-weight: 650; transition: background .18s, transform .18s, box-shadow .18s; }
+    button:hover:not(:disabled) { background: var(--blue-hover); box-shadow: 0 5px 13px rgba(37, 99, 235, .17); }
+    button:active:not(:disabled) { transform: translateY(1px); }
+    button.secondary { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    button.secondary:hover:not(:disabled) { background: #dbeafe; box-shadow: none; }
+    button.danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    button.danger:hover:not(:disabled) { background: #fee2e2; box-shadow: none; }
+    button:disabled { opacity: .48; cursor: not-allowed; box-shadow: none; }
+    #connect { white-space: nowrap; margin-left: auto; }
+    .small { margin: 12px 0 0; font-size: 13px; }
+    .hidden { display: none !important; }
+    .stack { display: grid; gap: 12px; }
+    .divider { border: 0; border-top: 1px solid var(--line); margin: 24px 0; }
+    #status { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 3px solid #60a5fa; background: var(--soft); border-radius: 0 9px 9px 0; color: #334155; padding: 13px 15px; min-height: 48px; font-size: 14px; }
+    #status.error { border-color: #ef4444; color: #b91c1c; background: #fef2f2; }
+    #status.success { border-color: #22c55e; color: #166534; background: #f0fdf4; }
+    #admin-panel { box-shadow: none; background: rgba(255, 255, 255, .78); }
+    details.card summary { cursor: pointer; font-size: 17px; font-weight: 700; }
+    details.card[open] summary { margin-bottom: 18px; }
+    #admin-panel section { min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: #fff; }
+    #admin-panel section h3:first-child { margin-top: 0; }
+    #admin-panel section > button { margin-top: 9px; }
+    @media (max-width: 760px) {
+      .header-inner { padding: 0 18px; gap: 10px; }
+      .nav { display: none; }
+      main { padding-top: 52px; }
+      .grid { grid-template-columns: 1fr; }
+      .full { grid-column: auto; }
+      #staking { grid-row: auto; }
+    }
+    @media (max-width: 520px) {
+      .header-inner { padding: 0 13px; }
+      .brand { font-size: 17px; }
+      #connect { font-size: 12px; padding: 9px 10px; }
+      main { padding: 46px 13px 70px; }
+      .hero p { font-size: 15px; }
+      .stats { gap: 8px; }
+      .stat { padding: 13px 10px; border-radius: 11px; }
+      .stat span { font-size: 11px; }
+      .stat strong { font-size: 14px; }
+      .card-kicker { display: none; }
+      .card { padding: 18px; }
+      .metric { grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 0 10px; }
+      .metric dt, .metric dd { font-size: 12px; }
+      .balance-item { padding: 13px; }
+      .balance-item strong { font-size: 15px; }
+      .row > button { flex: 1 1 auto; }
+      .actions > button { flex: 1 1 170px; }
+      .pool-bar { padding: 12px; }
+    }
+  </style>
+  <script src="keccak.js" defer></script>
+  <script src="stake.js" defer></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html" aria-label="MetaNodeStake 首页">MetaNodeStake</a>
+    <nav class="nav" aria-label="主导航">
+      <a class="active" href="#staking" aria-current="page">质押</a>
+      <a href="#overview">合约概览</a>
+      <a href="#admin-panel">管理</a>
+    </nav>
+    <button id="connect">连接钱包</button>
+  </div>
+</header>
+<main>
+  <section class="hero" aria-labelledby="page-title">
+    <span class="tag">Sepolia 测试网</span>
+    <h1 id="page-title">MetaNodeStake</h1>
+    <p>选择资金池，查看质押与奖励，并通过钱包直接完成链上操作。</p>
+  </section>
+  <div class="warning">当前为 Sepolia 测试网，请使用测试资产。链上操作需钱包确认，并消耗少量测试 ETH。</div>
 
-      * { box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
-      body {
-        margin: 0;
-        min-height: 100vh;
-        color: var(--ink);
-        font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: linear-gradient(180deg, #dbeafe 0%, #eff6ff 42%, #f3f4f6 100%);
-      }
-      button, input { font: inherit; }
-      button { cursor: pointer; }
-      button:focus-visible, a:focus-visible, input:focus-visible {
-        outline: 3px solid rgba(37, 99, 235, .35);
-        outline-offset: 3px;
-      }
-      .icon { width: 20px; height: 20px; flex: none; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  <div class="stats" aria-label="质押概览">
+    <div class="stat"><span>每区块奖励</span><strong id="rate">—</strong></div>
+    <div class="stat"><span>资金池数量 / 总权重</span><strong id="pool-count">—</strong></div>
+    <div class="stat"><span>合约奖励余额</span><strong id="funding">—</strong></div>
+  </div>
 
-      .site-header {
-        position: sticky;
-        top: 0;
-        z-index: 20;
-        height: 65px;
-        border-bottom: 1px solid rgba(226, 232, 240, .9);
-        background: rgba(255, 255, 255, .82);
-        box-shadow: 0 2px 10px rgba(30, 41, 59, .035);
-        backdrop-filter: blur(18px);
-      }
-      .header-inner {
-        max-width: 1280px;
-        height: 100%;
-        margin: auto;
-        padding: 0 28px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 28px;
-      }
-      .brand { color: var(--ink); text-decoration: none; font-size: 20px; font-weight: 750; letter-spacing: -.055em; white-space: nowrap; }
-      .nav { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-      .nav a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 600; padding: 10px 12px; border-radius: 9px; transition: color .18s, background .18s; }
-      .nav a:hover, .nav a.active { color: var(--ink); background: rgba(241, 245, 249, .75); }
-      .header-actions { display: flex; align-items: center; gap: 12px; }
-      .wallet-button, .primary-button {
-        color: #fff;
-        background: var(--blue);
-        border: 0;
-        border-radius: 9px;
-        font-size: 14px;
-        font-weight: 650;
-        transition: background .18s, transform .18s;
-      }
-      .wallet-button { padding: 10px 16px; white-space: nowrap; }
-      .wallet-button:hover, .primary-button:hover { background: var(--blue-hover); }
-      .wallet-button:active, .primary-button:active { transform: translateY(1px); }
-      .menu-button { display: none; align-items: center; justify-content: center; border: 0; color: var(--muted); background: transparent; width: 38px; height: 38px; border-radius: 9px; }
-      .mobile-nav { display: none; padding: 8px 20px 16px; background: #fff; border-bottom: 1px solid var(--line); }
-      .mobile-nav a { display: block; padding: 11px 10px; color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600; }
-
-      .page { max-width: 1100px; margin: auto; padding: 94px 20px 110px; }
-      .hero { text-align: center; margin-bottom: 38px; }
-      .hero h1 { margin: 0 0 12px; font-size: clamp(32px, 5vw, 42px); line-height: 1.2; letter-spacing: -.055em; font-weight: 760; }
-      .hero p { max-width: 620px; margin: auto; color: var(--muted); font-size: 18px; line-height: 1.6; }
-
-      .swap-card {
-        width: min(100%, 448px);
-        margin: 0 auto;
-        padding: 18px;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        box-shadow: var(--shadow);
-      }
-      .card-heading { display: flex; align-items: center; justify-content: space-between; margin: 0 0 22px; padding: 2px 2px 0; }
-      .card-heading h2 { margin: 0; font-size: 20px; line-height: 1.3; font-weight: 700; letter-spacing: -.025em; }
-      .icon-button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 9px; color: var(--muted); background: transparent; transition: background .18s, color .18s; }
-      .icon-button:hover { background: var(--soft); color: var(--ink); }
-      .settings-wrap { position: relative; }
-      .settings-panel { position: absolute; top: 44px; right: 0; z-index: 10; width: 248px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: #fff; box-shadow: var(--shadow); }
-      .settings-panel[hidden] { display: none; }
-      .settings-panel strong { display: block; font-size: 14px; margin-bottom: 12px; }
-      .settings-panel label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-      .slippage-options { display: flex; gap: 8px; }
-      .slippage-options button { flex: 1; padding: 7px 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); font-size: 13px; }
-      .slippage-options button.selected { color: var(--blue); background: #eff6ff; border-color: #bfdbfe; }
-
-      .field-label { display: flex; justify-content: space-between; gap: 12px; margin: 0 2px 9px; color: var(--muted); font-size: 13px; }
-      .token-box { display: flex; align-items: center; gap: 12px; height: 82px; padding: 14px 15px; border: 1px solid transparent; border-radius: 11px; background: var(--soft); transition: border-color .18s; }
-      .token-box:focus-within { border-color: #93c5fd; }
-      .amount-input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--ink); background: transparent; font-size: 27px; font-weight: 550; letter-spacing: -.035em; }
-      .amount-input::placeholder { color: #94a3b8; opacity: 1; }
-      .amount-input[readonly] { cursor: default; }
-      .token-pill { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: none; min-width: 104px; padding: 8px 10px; border: 0; border-radius: 9px; background: #e2e8f0; color: #0f172a; font-weight: 700; font-size: 16px; }
-      .token-pill:hover { background: #d9e3ee; }
-      .token-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; flex: none; border-radius: 50%; color: #fff; background: linear-gradient(135deg, #3b82f6, #a855f7); font-size: 12px; font-weight: 800; }
-      .token-pill .icon { width: 15px; height: 15px; stroke-width: 2; }
-      .swap-direction { display: flex; justify-content: center; padding: 9px 0; }
-      .switch-button { display: flex; align-items: center; justify-content: center; width: 38px; height: 38px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: var(--soft); transition: transform .22s, background .18s; }
-      .switch-button:hover { background: #e2e8f0; transform: rotate(180deg); }
-      .switch-button .icon { width: 19px; height: 19px; }
-      .notice { margin-top: 22px; padding: 20px 14px; text-align: center; border-radius: 10px; color: var(--muted); background: var(--soft); }
-      .notice strong { display: block; margin-bottom: 7px; font-size: 15px; font-weight: 650; }
-      .notice span { display: block; font-size: 13px; }
-      .card-footer { margin: 26px 0 4px; text-align: center; color: var(--muted); font-size: 13px; }
-      .demo-note { margin: 24px auto 0; text-align: center; color: #64748b; font-size: 12px; }
-
-      .guide { position: fixed; right: 18px; bottom: 18px; z-index: 15; width: min(320px, calc(100vw - 36px)); padding: 16px; border: 1px solid var(--line); border-radius: 11px; background: #fff; box-shadow: 0 12px 35px rgba(15, 23, 42, .13); }
-      .guide[hidden] { display: none; }
-      .guide-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-      .guide-head h2 { margin: 0; font-size: 15px; }
-      .guide-head .icon-button { width: 28px; height: 28px; }
-      .guide-head .icon { width: 18px; height: 18px; }
-      .guide ol { margin: 0; padding-left: 0; list-style: none; }
-      .guide li { margin: 0 0 10px; color: #475569; font-size: 13px; line-height: 1.5; }
-      .guide li:last-child { margin-bottom: 0; }
-      .guide li strong { display: block; color: #334155; font-size: 13px; }
-      .guide-toggle { position: fixed; right: 18px; bottom: 18px; z-index: 15; display: none; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 50%; color: #fff; background: var(--blue); box-shadow: 0 8px 22px rgba(37, 99, 235, .28); }
-      .guide-toggle.visible { display: flex; }
-      .toast { position: fixed; left: 50%; bottom: 24px; z-index: 30; max-width: min(90vw, 420px); padding: 12px 16px; border-radius: 10px; color: #fff; background: #1e293b; box-shadow: 0 12px 26px rgba(15, 23, 42, .2); font-size: 13px; text-align: center; transform: translate(-50%, 70px); opacity: 0; pointer-events: none; transition: transform .25s, opacity .25s; }
-      .toast.visible { transform: translate(-50%, 0); opacity: 1; }
-
-      @media (max-width: 700px) {
-        .header-inner { padding: 0 18px; gap: 10px; }
-        .brand { font-size: 18px; }
-        .nav { display: none; }
-        .wallet-button { padding: 9px 12px; font-size: 12px; }
-        .menu-button { display: inline-flex; }
-        .mobile-nav.open { display: block; }
-        .page { padding-top: 70px; }
-        .hero { margin-bottom: 28px; }
-        .hero p { font-size: 16px; }
-        .guide { position: static; margin: -50px auto 22px; width: min(448px, calc(100% - 40px)); }
-        .guide-toggle { bottom: 18px; }
-      }
-      @media (max-width: 420px) {
-        .header-inner { padding: 0 12px; }
-        .brand { font-size: 16px; }
-        .wallet-button { padding: 9px 10px; }
-        .page { padding-left: 13px; padding-right: 13px; }
-        .swap-card { padding: 15px; }
-        .token-box { padding: 12px; }
-        .amount-input { font-size: 24px; }
-        .token-pill { min-width: 92px; gap: 5px; font-size: 14px; }
-      }
-    </style>
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="#top" aria-label="MetaNodeSwap 首页">MetaNodeSwap</a>
-        <nav class="nav" aria-label="主导航">
-          <a class="active" href="#swap">交换</a>
-          <a href="#" data-demo-nav="流动性池">流动性池</a>
-          <a href="#" data-demo-nav="头寸">头寸</a>
-          <a href="#" data-demo-nav="发射">发射</a>
-        </nav>
-        <div class="header-actions">
-          <button class="wallet-button" type="button" data-wallet>连接钱包</button>
-          <button class="menu-button" type="button" id="menu-button" aria-label="打开菜单" aria-expanded="false" aria-controls="mobile-nav">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-          </button>
-        </div>
+  <div class="grid">
+    <section class="card" id="staking">
+      <div class="card-head"><h2>我的资金池</h2><span class="card-kicker">Pool details</span></div>
+      <div class="row pool-bar"><div class="field"><label for="pool-select">选择资金池</label><select id="pool-select" disabled><option value="0">ETH 池 #0</option></select></div><button id="refresh" class="secondary" disabled>刷新数据</button></div>
+      <div class="position-stats" aria-label="我的质押资产">
+        <div class="balance-item"><span>我的质押</span><strong id="staked">—</strong></div>
+        <div class="balance-item highlight"><span>待领取奖励</span><strong id="pending">—</strong></div>
+        <div class="balance-item"><span>申请解质押总量</span><strong id="requested">—</strong></div>
+        <div class="balance-item highlight"><span>已解锁可提取</span><strong id="withdrawable">—</strong></div>
       </div>
-      <nav class="mobile-nav" id="mobile-nav" aria-label="移动端导航">
-        <a href="#swap">交换</a>
-        <a href="#" data-demo-nav="流动性池">流动性池</a>
-        <a href="#" data-demo-nav="头寸">头寸</a>
-        <a href="#" data-demo-nav="发射">发射</a>
-      </nav>
-    </header>
+      <div class="unlock-note">距离下一笔可提取<strong id="remaining-blocks">—</strong></div>
+      <details class="pool-details">
+        <summary>查看资金池与钱包详情</summary>
+        <dl class="metric">
+        <dt>质押资产 / 合约</dt><dd id="stake-token">—</dd>
+        <dt>权重 / 上次奖励区块</dt><dd id="pool-weight">—</dd>
+        <dt>池中已质押 / 最低质押</dt><dd id="pool-amount">—</dd>
+        <dt>解质押锁定</dt><dd id="lock">—</dd>
+        <dt>钱包资产余额</dt><dd id="wallet-balance">—</dd>
+        <dt>合约授权额度</dt><dd id="allowance">—</dd>
+        <dt>钱包奖励代币</dt><dd id="reward-balance">—</dd>
+        </dl>
+      </details>
+    </section>
 
-    <main class="page" id="top">
-      <section class="hero" aria-labelledby="hero-title">
-        <h1 id="hero-title">MetaNodeSwap</h1>
-        <p>Secure, Fast, Decentralized Token Swapping on Sepolia.</p>
-      </section>
+    <section class="card" id="deposit-card">
+      <div class="card-head"><h2>质押</h2><span class="card-kicker">Deposit</span></div>
+      <div class="row"><div class="field"><label for="deposit-amount">质押数量</label><input id="deposit-amount" inputmode="decimal" placeholder="输入数量"></div><button id="deposit" disabled>质押</button></div>
+      <p id="deposit-note" class="small">ETH 池最低 0.01 ETH；交易另需 Gas。</p>
+      <div id="approve-box" class="hidden"><p class="small">ERC20 质押前需授权此合约使用对应数量的代币。</p><div class="actions"><button id="approve" class="secondary" disabled>授权输入数量</button><button id="reset-approve" class="secondary" disabled>清零授权</button></div></div>
+    </section>
 
-      <section class="swap-card" id="swap" aria-labelledby="swap-title">
-        <div class="card-heading">
-          <h2 id="swap-title">交换</h2>
-          <div class="settings-wrap">
-            <button class="icon-button" id="settings-button" type="button" aria-label="交换设置" aria-expanded="false" aria-controls="settings-panel">
-              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.05.05-1.86 1.86-.05-.05A1.7 1.7 0 0 0 16 18.4a1.7 1.7 0 0 0-1.5 1.54V20h-2.63v-.06A1.7 1.7 0 0 0 10.37 18.4a1.7 1.7 0 0 0-1.88.34l-.05.05-1.86-1.86.05-.05A1.7 1.7 0 0 0 6.97 15a1.7 1.7 0 0 0-1.54-1.5H5.4v-2.63h.04A1.7 1.7 0 0 0 6.97 9.37a1.7 1.7 0 0 0-.34-1.88l-.05-.05 1.86-1.86.05.05A1.7 1.7 0 0 0 10.37 5a1.7 1.7 0 0 0 1.5-1.54V3.4h2.63v.04A1.7 1.7 0 0 0 16 5a1.7 1.7 0 0 0 1.88-.34l.05-.05 1.86 1.86-.05.05A1.7 1.7 0 0 0 19.4 9.37a1.7 1.7 0 0 0 1.54 1.5H21v2.63h-.06A1.7 1.7 0 0 0 19.4 15Z" /></svg>
-            </button>
-            <div class="settings-panel" id="settings-panel" hidden>
-              <strong>交换设置</strong>
-              <label>滑点容差（界面演示）</label>
-              <div class="slippage-options" role="group" aria-label="滑点容差">
-                <button type="button" class="selected" aria-pressed="true">0.5%</button>
-                <button type="button" aria-pressed="false">1.0%</button>
-                <button type="button" aria-pressed="false">2.0%</button>
-              </div>
-            </div>
-          </div>
-        </div>
+    <section class="card" id="withdraw-card">
+      <div class="card-head"><h2>退出及奖励</h2><span class="card-kicker">Withdraw &amp; claim</span></div>
+      <div class="row"><div class="field"><label for="unstake-amount">申请解质押数量</label><input id="unstake-amount" inputmode="decimal" placeholder="输入数量"></div><button id="unstake" class="secondary" disabled>申请解质押</button></div>
+      <p class="small">申请后需等待该池设置的锁定区块数。</p>
+      <div class="actions"><button id="withdraw" class="secondary" disabled>提取已解锁资产</button><button id="claim" class="secondary" disabled>领取奖励</button></div>
+      <p class="small">提取按钮在“已解锁可提取”大于 0 时启用；等待解锁期间页面每 15 秒自动刷新，也可以点击上方“刷新”。</p>
+    </section>
 
-        <div class="field-label"><label for="from-amount">从</label><span>余额: 0</span></div>
-        <div class="token-box">
-          <input class="amount-input" id="from-amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="输入兑换数量" />
-          <button class="token-pill" id="from-token" type="button" aria-label="当前支付代币 ETH">
-            <span class="token-icon" id="from-icon">E</span><span id="from-symbol">ETH</span>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-          </button>
-        </div>
+    <section class="card full">
+      <h2>交易状态</h2><div id="status" role="status" aria-live="polite">请连接浏览器钱包。</div>
+      <p class="small">质押代理：<a href="https://sepolia.etherscan.io/address/0xe22E65cc67457678B361476158f7865e949BBcd5" target="_blank" rel="noopener noreferrer">0xe22E65cc67457678B361476158f7865e949BBcd5</a></p>
+    </section>
 
-        <div class="swap-direction">
-          <button class="switch-button" id="switch-button" type="button" aria-label="交换支付和接收代币">
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v16m0 0-4-4m4 4 4-4M16 21V5m0 0-4 4m4-4 4 4" /></svg>
-          </button>
-        </div>
+    <details class="card full" id="overview">
+      <summary>合约概览</summary>
+      <dl class="metric">
+        <dt>钱包</dt><dd id="account">未连接</dd>
+        <dt>网络 / 当前区块</dt><dd id="network">—</dd>
+        <dt>奖励区块</dt><dd id="blocks">—</dd>
+        <dt>奖励代币</dt><dd id="reward-token">—</dd>
+        <dt>暂停状态</dt><dd id="pause-state">—</dd>
+        <dt>我的权限</dt><dd id="roles">—</dd>
+      </dl>
+    </details>
 
-        <div class="field-label"><label for="to-amount">到</label><span>余额: 0</span></div>
-        <div class="token-box">
-          <input class="amount-input" id="to-amount" type="text" placeholder="0" aria-label="预计接收数量" readonly />
-          <button class="token-pill" id="to-token" type="button" aria-label="当前接收代币 MNA">
-            <span class="token-icon" id="to-icon">M</span><span id="to-symbol">MNA</span>
-            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-          </button>
-        </div>
+    <details class="card full" id="query-panel">
+      <summary>奖励与资金池查询</summary>
+      <div class="row"><div class="field"><label for="query-block">查询指定区块的预计奖励</label><input id="query-block" inputmode="numeric" placeholder="区块号"></div><button id="query-reward" class="secondary" disabled>查询</button></div>
+      <p id="query-result" class="small">—</p>
+      <div class="row"><div class="field"><label for="from-block">奖励区间起始区块</label><input id="from-block" inputmode="numeric" placeholder="起始区块"></div><div class="field"><label for="to-block">结束区块（不含）</label><input id="to-block" inputmode="numeric" placeholder="结束区块"></div><button id="query-multiplier" class="secondary" disabled>查询区间总奖励</button></div>
+      <p id="multiplier-result" class="small">—</p>
+      <div class="actions"><button id="update-pool" class="secondary" disabled>更新当前池奖励账本</button><button id="update-all" class="secondary" disabled>更新全部资金池</button></div>
+      <p class="small">以上更新操作会发送交易并消耗 Gas；查询操作不会。</p>
+      <hr class="divider">
+      <h3>补充奖励代币</h3>
+      <div class="row"><div class="field"><label for="fund-amount">转入质押合约的奖励代币数量</label><input id="fund-amount" inputmode="decimal" placeholder="输入数量"></div><button id="fund" class="secondary" disabled>转入奖励代币</button></div>
+    </details>
 
-        <div class="notice" aria-live="polite">
-          <strong>请先连接钱包</strong>
-          <span>Connect your wallet to start trading</span>
-        </div>
-        <p class="card-footer">Supported Network: Sepolia Testnet</p>
-      </section>
-      <p class="demo-note">这是一个教学项目，仅在测试网络运行。此 Swap 页面为静态界面演示，不执行交易。<a href="stake.html">打开 Sepolia 质押验证页</a>。</p>
-    </main>
-
-    <aside class="guide" id="guide" aria-labelledby="guide-title">
-      <div class="guide-head">
-        <h2 id="guide-title">使用指南</h2>
-        <button class="icon-button" id="close-guide" type="button" aria-label="关闭使用指南">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5 5 19" /></svg>
-        </button>
+    <details class="card full" id="admin-panel">
+      <summary>管理员操作</summary>
+      <p class="small">只有持有相应链上角色的钱包可以提交。参数变更会影响所有用户和现有奖励。</p>
+      <div class="grid">
+        <section>
+          <h3>奖励参数</h3>
+          <label for="admin-start">开始区块</label><input id="admin-start" inputmode="numeric" placeholder="区块号">
+          <button id="set-start" class="secondary" disabled>设置开始区块</button>
+          <label for="admin-end">结束区块</label><input id="admin-end" inputmode="numeric" placeholder="区块号">
+          <button id="set-end" class="secondary" disabled>设置结束区块</button>
+          <label for="admin-rate">每区块奖励代币数量</label><input id="admin-rate" inputmode="decimal" placeholder="例如 10">
+          <button id="set-rate" class="secondary" disabled>设置每区块奖励</button>
+          <label for="admin-reward-token">新奖励代币地址</label><input id="admin-reward-token" placeholder="0x...">
+          <button id="set-token" class="danger" disabled>更换奖励代币</button>
+        </section>
+        <section>
+          <h3>暂停控制</h3>
+          <div class="actions"><button id="toggle-withdraw" class="secondary" disabled>暂停提取/解质押</button><button id="toggle-claim" class="secondary" disabled>暂停领奖</button></div>
+          <h3>新增资金池</h3>
+          <label for="add-token">质押 ERC20 地址</label><input id="add-token" placeholder="0x...">
+          <div class="row"><div class="field"><label for="add-weight">权重</label><input id="add-weight" inputmode="numeric"></div><div class="field"><label for="add-min">最低质押数量</label><input id="add-min" inputmode="decimal"></div><div class="field"><label for="add-lock">锁定区块数</label><input id="add-lock" inputmode="numeric"></div></div>
+          <label class="check"><input id="add-update" type="checkbox" checked>新增前更新所有池</label>
+          <button id="add-pool" class="secondary" disabled>新增资金池</button>
+        </section>
+        <section>
+          <h3>当前池参数</h3>
+          <label for="edit-min">最低质押数量</label><input id="edit-min" inputmode="decimal">
+          <label for="edit-lock">锁定区块数</label><input id="edit-lock" inputmode="numeric">
+          <button id="edit-pool" class="secondary" disabled>更新当前池参数</button>
+          <label for="edit-weight">当前池权重</label><input id="edit-weight" inputmode="numeric">
+          <label class="check"><input id="weight-update" type="checkbox" checked>改权重前更新所有池</label>
+          <button id="set-weight" class="secondary" disabled>设置当前池权重</button>
+        </section>
+        <section>
+          <h3>角色管理</h3>
+          <label for="role-type">角色</label><select id="role-type"><option value="admin">ADMIN_ROLE</option><option value="upgrade">UPGRADE_ROLE</option><option value="default">DEFAULT_ADMIN_ROLE</option></select>
+          <label for="role-address">账户地址</label><input id="role-address" placeholder="0x...">
+          <div class="actions"><button id="check-role" class="secondary" disabled>查询角色</button><button id="grant-role" class="secondary" disabled>授予角色</button><button id="revoke-role" class="danger" disabled>撤销角色</button><button id="renounce-role" class="danger" disabled>放弃自己的角色</button></div>
+          <p id="role-result" class="small">—</p>
+          <h3>UUPS 升级</h3>
+          <label for="upgrade-address">新实现合约地址</label><input id="upgrade-address" placeholder="0x...">
+          <button id="upgrade" class="danger" disabled>升级实现合约</button>
+          <p class="small">仅支持不带初始化调用的升级。请先审查新实现的存储布局和权限。</p>
+        </section>
       </div>
-      <ol>
-        <li><strong>1. 连接钱包</strong>点击右上角“连接钱包”按钮，支持 MetaMask、WalletConnect 等钱包。</li>
-        <li><strong>2. 切换网络</strong>确保您的钱包连接到 Sepolia 测试网络。</li>
-        <li><strong>3. 获取测试代币</strong>您可以从 Sepolia 水龙头获取 ETH，然后在测试合约中获取测试代币。</li>
-        <li><strong>4. 开始交换</strong>选择代币和数量，即可进行代币交换。</li>
-      </ol>
-    </aside>
-    <button class="guide-toggle" id="open-guide" type="button" aria-label="打开使用指南">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.7 9a2.4 2.4 0 0 1 4.6.9c0 1.6-2.3 2-2.3 3.5M12 17h.01" /></svg>
-    </button>
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-    <script>
-      const byId = (id) => document.getElementById(id);
-      const toast = byId('toast');
-      let toastTimer;
-      function showToast(message) {
-        toast.textContent = message;
-        toast.classList.add('visible');
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => toast.classList.remove('visible'), 3200);
-      }
-
-      document.querySelectorAll('[data-wallet]').forEach((button) => {
-        button.addEventListener('click', () => showToast('这是静态 HTML 演示，尚未接入钱包。'));
-      });
-      document.querySelectorAll('[data-demo-nav]').forEach((link) => {
-        link.addEventListener('click', (event) => {
-          event.preventDefault();
-          showToast(`${link.dataset.demoNav} 页面未包含在此 HTML 演示中。`);
-          byId('mobile-nav').classList.remove('open');
-          byId('menu-button').setAttribute('aria-expanded', 'false');
-        });
-      });
-
-      const menu = byId('mobile-nav');
-      byId('menu-button').addEventListener('click', () => {
-        const open = menu.classList.toggle('open');
-        byId('menu-button').setAttribute('aria-expanded', String(open));
-      });
-
-      const settings = byId('settings-panel');
-      byId('settings-button').addEventListener('click', () => {
-        settings.hidden = !settings.hidden;
-        byId('settings-button').setAttribute('aria-expanded', String(!settings.hidden));
-      });
-      document.querySelectorAll('.slippage-options button').forEach((button) => {
-        button.addEventListener('click', () => {
-          document.querySelectorAll('.slippage-options button').forEach((option) => {
-            option.classList.remove('selected');
-            option.setAttribute('aria-pressed', 'false');
-          });
-          button.classList.add('selected');
-          button.setAttribute('aria-pressed', 'true');
-        });
-      });
-      document.addEventListener('click', (event) => {
-        if (!event.target.closest('.settings-wrap')) {
-          settings.hidden = true;
-          byId('settings-button').setAttribute('aria-expanded', 'false');
-        }
-      });
-
-      const tokens = ['ETH', 'MNA'];
-      function renderTokens() {
-        byId('from-symbol').textContent = tokens[0];
-        byId('to-symbol').textContent = tokens[1];
-        byId('from-icon').textContent = tokens[0][0];
-        byId('to-icon').textContent = tokens[1][0];
-        byId('from-token').setAttribute('aria-label', `当前支付代币 ${tokens[0]}`);
-        byId('to-token').setAttribute('aria-label', `当前接收代币 ${tokens[1]}`);
-      }
-      byId('switch-button').addEventListener('click', () => {
-        tokens.reverse();
-        renderTokens();
-        byId('from-amount').value = '';
-        showToast('已切换代币方向；连接钱包后才能获取实时报价。');
-      });
-      for (const id of ['from-token', 'to-token']) {
-        byId(id).addEventListener('click', () => showToast('静态演示仅展示 ETH 与 MNA。使用中间按钮切换方向。'));
-      }
-      byId('from-amount').addEventListener('input', (event) => {
-        const cleaned = event.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
-        if (cleaned !== event.target.value) event.target.value = cleaned;
-      });
-
-      byId('close-guide').addEventListener('click', () => {
-        byId('guide').hidden = true;
-        byId('open-guide').classList.add('visible');
-      });
-      byId('open-guide').addEventListener('click', () => {
-        byId('guide').hidden = false;
-        byId('open-guide').classList.remove('visible');
-      });
-    </script>
-  </body>
+    </details>
+  </div>
+</main>
+</body>
 </html>

@@ -11,7 +11,7 @@ node --check web/stake.js
 node --check web/keccak.js
 ```
 
-Open `web/stake.html` in a browser with an injected wallet to use the Sepolia page. The page reads on-chain state directly and has no npm dependency.
+Open `web/index.html` in a browser with an injected wallet to use the Sepolia page. The page reads on-chain state directly and has no npm dependency.
 
 ## Sepolia deployment
 
